@@ -1,0 +1,35 @@
+version: '2'
+services:
+  mariadb:
+    image: mariadb:10.3.0
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret-password
+      - MYSQL_DATABASE=craft
+    volumes:
+      - .data/mariadb:/var/lib/mysql
+  nginx:
+    image: nginx:1.13.3-alpine
+    depends_on:
+      - php
+    links:
+      - php:php
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/var/www/html
+      - ./.data/nginx/assets:/var/www/html/public/assets
+      - ./.docker/nginx/conf.d:/etc/nginx/conf.d
+  php:
+    build:
+      context: .
+      dockerfile: .docker/php/Dockerfile
+    depends_on:
+      - mariadb
+    links:
+      - mariadb:mariadb
+    restart: always
+    volumes:
+      - ./html:/var/www/html
+      - ./.data/nginx/assets:/var/www/html/public/assets
